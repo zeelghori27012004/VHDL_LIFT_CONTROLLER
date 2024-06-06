@@ -1,0 +1,186 @@
+-------------------------------------------------------------------------------------------------LIFT CONTROLLER VHDL CODE USING 7 STATES------------------------------------------------------------------------------------------------------------
+timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company:
+// Engineer:
+//
+// Create Date:    14:22:50 04/24/2024
+// Design Name:
+// Module Name:    Lift_controller
+// Project Name:
+// Target Devices:
+// Tool versions:
+// Description:
+//
+// Dependencies:
+//
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+//
+//////////////////////////////////////////////////////////////////////////////////
+ 
+module lift_controller(
+    input clk,                 // Clock input
+    input reset,               // Reset input
+    input call0,               // Call button for floor 0
+    input call1,               // Call button for floor 1
+    input call2,               // Call button for floor 2
+    input bottom_sensor,       // Sensor detecting bottom position
+    input middle_minus_sensor, // Sensor detecting middle-minus position
+    input middle_plus_sensor,  // Sensor detecting middle-plus position
+    input top_sensor,          // Sensor detecting top position
+    output reg motor_up,       // Direction control for motor
+    output reg motor_down,     // Enable control for motor
+    output reg indicator0,     // Indicator light for floor 0
+    output reg indicator1,     // Indicator light for floor 1
+    output reg indicator2      // Indicator light for floor 2
+);
+
+// Define states
+parameter FLOOR0 = 3'b000;
+parameter FLOOR1 = 3'b001;
+parameter FLOOR2 = 3'b010;
+parameter MOVING_UP_1 = 3'b011;
+parameter MOVING_UP_2 = 3'b100;
+parameter MOVING_DOWN_1 = 3'b101;
+parameter MOVING_DOWN_2 = 3'b110;
+
+// Internal signals
+reg [2:0] next_state, current_state;
+
+// State register
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        current_state <= MOVING_DOWN_2;
+    end else begin
+        current_state <= next_state;
+    end
+end
+
+// Combinational logic for next state and motor control
+always @(*) begin
+    case (current_state)
+        FLOOR0: begin // Floor 0
+            indicator0 = 1;
+            indicator1 = 0;
+            indicator2 = 0;
+            if (call0) begin // Button for floor 0 pressed
+                next_state = FLOOR0;
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+            end else if (call1) begin // Button for floor 1 pressed
+                next_state = MOVING_UP_1; // Move up to Floor 1
+            end else if (call2) begin // Button for floor 2 pressed
+                next_state = MOVING_UP_2; // Move up to Floor 2
+            end else begin
+                next_state = FLOOR0;
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+            end
+        end
+        FLOOR1: begin // Floor 1
+            indicator0 = 0;
+            indicator1 = 1;
+            indicator2 = 0;
+            if (call1) begin // Button for floor 1 pressed
+                next_state = FLOOR1;
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+            end else if (call0) begin // Button for floor 0 pressed
+                next_state = MOVING_DOWN_2; // Move down to Floor 0
+            end else if (call2) begin // Button for floor 2 pressed
+                next_state = MOVING_UP_2; // Move up to Floor 2
+            end else begin
+                next_state = FLOOR1;
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+            end
+        end
+        FLOOR2: begin // Floor 2
+            indicator0 = 0;
+            indicator1 = 0;
+            indicator2 = 1;
+            if (call2) begin // Button for floor 2 pressed
+                next_state = FLOOR2;
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+            end else if (call0) begin // Button for floor 0 pressed
+                next_state = MOVING_DOWN_2; // Move down to Floor 0
+            end else if (call1) begin // Button for floor 1 pressed
+                next_state = MOVING_DOWN_1; // Move down to Floor 1
+            end else begin
+                next_state = FLOOR2;
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+            end
+        end
+        MOVING_UP_1: begin // Moving Up 1
+            motor_up = 1;
+            motor_down = 0;
+            indicator0 = 0;
+            indicator1 = 0;
+            indicator2 = 0;
+            if (middle_minus_sensor && middle_plus_sensor) begin
+                next_state = FLOOR1; // Reached Floor 1
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+                indicator1 = 1;
+            end else begin
+                next_state = MOVING_UP_1;
+            end
+        end
+        MOVING_UP_2: begin // Moving Up 2
+            motor_up = 1;
+            motor_down = 0;
+            indicator0 = 0;
+            indicator1 = 0;
+            indicator2 = 0;
+            if (top_sensor) begin
+                next_state = FLOOR2; // Reached Floor 2
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+                indicator2 = 1;
+            end else begin
+                next_state = MOVING_UP_2;
+            end
+        end
+        MOVING_DOWN_1: begin // Moving Down 1
+            motor_up = 0;
+            motor_down = 1;
+            indicator0 = 0;
+            indicator1 = 0;
+            indicator2 = 0;
+            if (middle_minus_sensor && middle_plus_sensor) begin
+                next_state = FLOOR1; // Reached Floor 1
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+                indicator1 = 1;
+            end else begin
+                next_state = MOVING_DOWN_1;
+            end
+        end
+        MOVING_DOWN_2: begin // Moving Down 2
+            motor_up = 0;
+            motor_down = 1;
+            indicator0 = 0;
+            indicator1 = 0;
+            indicator2 = 0;
+            if (bottom_sensor) begin
+                next_state = FLOOR0; // Reached Floor 0
+                motor_up = 0; // Stop motor
+                motor_down = 0;
+                indicator0 = 1;
+            end else begin
+                next_state = MOVING_DOWN_2;
+            end
+        end
+        default: begin // Default state
+            next_state = current_state;
+            motor_up = 0;
+            motor_down = 0;
+        end
+    endcase
+end
+
+endmodule

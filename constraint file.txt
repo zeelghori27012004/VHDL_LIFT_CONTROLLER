@@ -1,0 +1,30 @@
+---------------------------------------------------------------------------------------------------------------------------------CONSTRAINT FILE---------------------------------------------------------------------------------------------------------------------
+
+
+NET "clk" LOC ="E3" | IOSTANDARD = "LVCMOS33";
+NET "call0" LOC ="P18" | IOSTANDARD = "LVCMOS33";
+NET "call1" LOC ="P17" | IOSTANDARD = "LVCMOS33";
+NET "call2" LOC ="M18" | IOSTANDARD = "LVCMOS33";
+NET "top_sensor" LOC ="C17" | IOSTANDARD = "LVCMOS33";
+NET "middle_plus_sensor" LOC ="D18" | IOSTANDARD = "LVCMOS33";
+NET "middle_minus_sensor" LOC ="D14" | IOSTANDARD = "LVCMOS33";
+NET "bottom_sensor" LOC ="F16" | IOSTANDARD = "LVCMOS33";
+//NET "stop" LOC ="J15" | IOSTANDARD = "LVCMOS33";
+NET "reset" LOC ="M17" | IOSTANDARD = "LVCMOS33";
+//NET "emergency" LOC ="N17" | IOSTANDARD = "LVCMOS33";
+
+
+//NET "out_ground" LOC ="K1" | IOSTANDARD = "LVCMOS33";
+//NET "out_first" LOC ="H1" | IOSTANDARD = "LVCMOS33";
+//NET "out_second" LOC ="H4" | IOSTANDARD = "LVCMOS33";
+NET "indicator0" LOC ="H17" | IOSTANDARD = "LVCMOS33";
+NET "indicator1" LOC ="K15" | IOSTANDARD = "LVCMOS33";
+NET "indicator2" LOC ="J13" | IOSTANDARD = "LVCMOS33";
+
+//NET "curr_ground" LOC ="G2" | IOSTANDARD = "LVCMOS33";
+//NET "curr_first" LOC ="G4" | IOSTANDARD = "LVCMOS33";
+//NET "curr_second" LOC ="H2" | IOSTANDARD = "LVCMOS33";
+
+NET "motor_up" LOC ="F6" | IOSTANDARD = "LVCMOS33";
+NET "motor_down" LOC ="J2" | IOSTANDARD = "LVCMOS33";
+//NET "buzz" LOC ="E6" | IOSTANDARD = "LVCMOS33";

@@ -1,0 +1,141 @@
+-----------------------------------------------------------------------------------------------------LIFT CONTROLLER VHDL CODE USING 3 STATES----------------------------------------------------------------------------------------------------------
+
+
+module lift_controller(
+    input clk,                  // Clock input
+    input reset,                // Reset input
+    input call0,                // Call button for floor 0
+    input call1,                // Call button for floor 1
+    input call2,                // Call button for floor 2
+    input bottom_sensor,        // Sensor detecting bottom position
+    input middle_minus_sensor,  // Sensor detecting middle-minus position
+    input middle_plus_sensor,   // Sensor detecting middle-plus position
+    input top_sensor,           // Sensor detecting top position
+    output reg motor_up,        // Direction control for motor
+    output reg motor_down,      // Enable control for motor
+    output reg indicator0,      // Indicator light for floor 0
+    output reg indicator1,      // Indicator light for floor 1
+    output reg indicator2       // Indicator light for floor 2
+);
+
+    // Define states
+    parameter FLOOR0 = 2'b00;
+    parameter FLOOR1 = 2'b01;
+    parameter FLOOR2 = 2'b10;
+
+    // Define state register and next state logic
+    reg [1:0] state, next_state;
+    reg clk_20KHz;
+    integer counter = 1;
+
+    always @(posedge clk) begin
+        if(counter == 5000) begin
+            counter = 1;
+            clk_20KHz = ~clk_20KHz;
+        end else begin
+            counter = counter + 1;
+        end
+    end
+
+    always @(posedge clk_20KHz or posedge reset) begin
+        if (reset) begin
+            state <= FLOOR0;
+            while(~(bottom_sensor)) begin
+                motor_up <= 0;
+                motor_down <= 1;
+            end
+            motor_up <= 0;
+            motor_down <= 0;
+            indicator0 <= 1;
+        end else begin
+            state <= next_state;
+        end
+    end
+
+    // State transition and control logic
+    always @(*) begin
+        case(state)
+            FLOOR0: begin
+                if (call1) begin
+                    indicator0 = 0;
+                    while(~(middle_minus_sensor) && ~(middle_plus_sensor)) begin
+                        motor_up = 1;
+                        motor_down = 0;
+                    end
+                    motor_up = 0;
+                    motor_down = 0;
+                    next_state = FLOOR1;
+                    indicator1 = 1;
+                end else if (call2) begin
+                    indicator0 = 0;
+                    while(~(top_sensor)) begin
+                        motor_up = 1;
+                        motor_down = 0;
+                    end
+                    motor_up = 0;
+                    motor_down = 0;
+                    next_state = FLOOR2;
+                    indicator2 = 1;
+                end else begin
+                    next_state = FLOOR0;
+                end
+            end
+            FLOOR1: begin
+                if (call0) begin
+                    indicator1 = 0;
+                    while(~(bottom_sensor)) begin
+                        motor_up = 0;
+                        motor_down = 1;
+                    end
+                    motor_up = 0;
+                    motor_down = 0;
+                    next_state = FLOOR0;
+                    indicator0 = 1;
+                end else if (call2) begin
+                    indicator1 = 0;
+                    while(~(top_sensor)) begin
+                        motor_up = 1;
+                        motor_down = 0;
+                    end
+                    motor_up = 0;
+                    motor_down = 0;
+                    next_state = FLOOR2;
+                    indicator2 = 1;
+                end else begin
+                    next_state = FLOOR1;
+                end
+            end
+            FLOOR2: begin
+                if (call0) begin
+                    indicator2 = 0;
+                    while(~(bottom_sensor)) begin
+                        motor_up = 0;
+                        motor_down = 1;
+                    end
+                    motor_up = 0;
+                    motor_down = 0;
+                    next_state = FLOOR0;
+                    indicator0 = 1;
+                end else if (call1) begin
+                    indicator2 = 0;
+                    while(~(middle_minus_sensor && middle_plus_sensor)) begin
+                        motor_up = 0;
+                        motor_down = 1;
+                    end
+                    motor_up = 0;
+                    motor_down = 0;
+                    next_state = FLOOR1;
+                    indicator1 = 1;
+                end else begin
+                    next_state = FLOOR2;
+                end
+            end
+            default: begin
+                next_state = state;
+                motor_up = 0;
+                motor_down = 0;
+            end
+        endcase
+    end
+
+endmodule
